@@ -1,9 +1,7 @@
-LSN_exercises_delivery
+# LSN_exercises_delivery
 
-Every jupyter notebook has it connected folder, to compile it is sufficient to run make in every folder. 
+Each exercise (code + jupyter notebook) is in its own folder; to compile it, it is sufficient to run ```make``` in every folder. 
 
-There are exercises that have all data already saved in specific files, in this case notebooks have functions with a specific "FORCE_NEW_RUN" key set to False, if a new run is necessary it is sufficient to set this key to True.
+For some exercises, pre-computed data are provided: in this case, each notebook has a ```FORCE_NEW_RUN``` boolean variable, which controls whether to keep existing data or force a new run.
 
-module ipympl as been used for some plot (exercise 8,12).
-
-humor sans font may be necessary in exercise 11.
+> :warning: A working ``ipympl``` module installation for JupyterLab may be required to run exercises 8 and 12.
