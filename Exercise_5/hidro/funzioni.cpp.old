@@ -1,0 +1,137 @@
+#include "funzioni.hh"
+#include "random.h"
+#include <iostream>
+#include <cmath>
+#include <fstream>
+
+using namespace std;
+
+double norm(double *p) {
+   return p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
+}
+
+void move_pos(double *pos, double *move) {
+  for (unsigned int i = 0; i < 3; i++)
+    pos[i] += move[i];
+}
+
+double psi_100(double *p)
+{
+  return pow(a0,-3/2)/sqrt(M_PI)*exp(-sqrt(norm(p))/a0);
+}
+double psi_210(double *p)
+{
+  return ((sqrt(2.)*pow(a0,-5/2))/(8.*sqrt(M_PI)))*exp(-sqrt(norm(p))/(2.*a0))*sqrt(norm(p))*(p[3]/(sqrt(norm(p))));
+}
+
+void Metropolis_h_uniform(double *p, double *p_old, Random rnd_s, bool type)
+{
+  //cout << p[0] << p[1] << p[2] << endl;
+  //cout << p_old[0] << p_old[1] << p_old[2] << endl;
+  double alpha = 0;
+  if(type == false)
+  {
+    alpha = min(1.,(abs(psi_100(p)*psi_100(p)))/(abs(psi_100(p_old)*psi_100(p_old))));
+  }
+  else
+  {
+    alpha = min(1.,(abs(psi_210(p)*psi_210(p)))/(abs(psi_210(p_old)*psi_210(p_old))));
+  }
+  double r = rnd_s.Rannyu(0, 1);
+  //if(type == true) cout << "alpha = " << alpha << " r = " << r <<  endl;
+  if(r <= alpha) return;
+  else
+  {
+    p[0] = p_old[0];
+    p[1] = p_old[1];
+    p[2] = p_old[2];
+    return;
+  }
+}
+void Metropolis_h_gaussian(double *p, double *p_old, double *trans, Random rnd_s, bool type)
+{
+  //cout << p[0] << p[1] << p[2] << endl;
+  //cout << p_old[0] << p_old[1] << p_old[2] << endl;
+  double alpha = 0;
+  if(type == false)
+  {
+    alpha = min(1.,(abs(psi_100(p)*psi_100(p)))/(abs(psi_100(p_old)*psi_100(p_old))));
+  }
+  else
+  {
+    alpha = min(1.,(abs(psi_210(p)*psi_210(p)))/(abs(psi_210(p_old)*psi_210(p_old))));
+  }
+  double r = rnd_s.Rannyu(0, 1);
+  //if(type == true) cout << "alpha = " << alpha << " r = " << r <<  endl;
+  if(r <= alpha) return;
+  else
+  {
+    p[0] = p_old[0];
+    p[1] = p_old[1];
+    p[2] = p_old[2];
+    return;
+  }
+}
+double acceptance_Metropolis_uniform(double move, Random rnd_s, bool type)
+{
+  double accept =0.;
+  double accept2 =0.;
+  double good =0.;
+  double k = 0;
+  bool found = false;
+  while(found == false){
+  double p[3] {1.*a0,1.*a0,1.*a0};
+  double p_old[3] {1.*a0,1.*a0,1.*a0};
+  accept = 0.;
+  accept2 = 0.;
+  good = 0;
+  for(int i = 0; i < 1000; i++)
+  {
+    double theta = rnd_s.Rannyu(0, M_PI);
+    double phi = rnd_s.Rannyu(0, 2*M_PI);
+    double move3D[3] {cos(phi)*sin(theta)*move,cos(phi)*cos(theta)*move,sin(phi)*move};
+
+    //cout << p[0] << " " << p[1] << " " << p[2] << endl;
+    move_pos(p, move3D);
+    double alpha = 0;
+    //cout << pow(a0,-3/2)/sqrt(M_PI) << " "<< exp(-sqrt(norm(p))/a0) << endl;
+    //cout << psi_100(p)*psi_100(p) << endl;
+    if(type == false)
+    {
+      alpha = min(1.,(abs(psi_100(p)*psi_100(p)))/(abs(psi_100(p_old)*psi_100(p_old))));
+    }
+    else
+    {
+      alpha = min(1.,(abs(psi_210(p)*psi_210(p)))/(abs(psi_210(p_old)*psi_210(p_old))));
+    }
+    double r = rnd_s.Rannyu(0, 1);
+    if(r <= alpha)
+    {
+      p_old[0] = p[0];
+      p_old[1] = p[1];
+      p_old[2] = p[2];
+    }
+    else
+    {
+      p[0] = p_old[0];
+      p[1] = p_old[1];
+      p[2] = p_old[2];
+    }
+    if(alpha >= 0.55) accept++;
+    if(alpha <= 0.45) accept2++;
+    if((alpha > 0.45) && (alpha < 0.55)) good++;
+  }
+  if(accept/1000 > 0.5)
+  {
+    move = move+0.05*a0;
+  }
+  else if(accept2/1000 > 0.5)
+  {
+    move = move-0.05*a0;
+  }
+  k++;
+  if(good/1000. > 0.9 ) found = true;
+  if(k > 10) found = true;
+  }
+  return move;
+}

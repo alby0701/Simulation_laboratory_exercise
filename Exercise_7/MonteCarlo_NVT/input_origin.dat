@@ -1,0 +1,17 @@
+{T}
+{Np}
+{Rho}
+{Rcut}
+{Delta}
+{Bloks}
+{Steps}
+{Equilibration_Steps}
+
+  ReadInput >> temp;
+  ReadInput >> npart;
+  ReadInput >> rho;
+  ReadInput >> rcut;
+  ReadInput >> delta;
+  ReadInput >> nblk;
+  ReadInput >> nstep;
+  ReadInput >> equilibration;

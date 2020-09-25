@@ -1,0 +1,15 @@
+CC = g++
+CFLAGS = -Wall -O3 --std=c++17 -march=native
+
+main: main.cpp    
+	$(CC) main.cpp tsp.cpp -o main $(CFLAGS)
+    
+all: main
+tsp.o: tsp.cpp tsp.h
+	$(CC) -fPIC -c tsp.cpp -o tsp.o $(CFLAGS)
+tsp.so: tsp.o
+	$(CC) -shared tsp.o -o tsp.so $(CFLAGS)
+
+
+clean :
+	rm *.o *.so

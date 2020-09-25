@@ -1,0 +1,98 @@
+#include <cmath>
+#include <valarray>
+#include <functional>
+#include <iostream>
+#include "random.h"
+
+void block_average(double *sample, unsigned int sample_size, unsigned int nblocks, double *mean, double *err) {
+    /*
+     *  Compute the block average (<mean>, size nblocks) 
+     *  and standard deviation (<err>, size nblocks)
+     *  from the sample.
+     */ 
+
+    unsigned int samples_per_block = sample_size / nblocks;
+    double block_mean, 
+           mean_cum(0), 
+           mean_sq_cum(0);
+     
+    for (unsigned int n = 0; n < nblocks; n++) {
+        block_mean = 0;
+        for (unsigned int j = 0; j < samples_per_block; j++)
+            block_mean += sample[n*samples_per_block + j];
+        block_mean /= samples_per_block;
+        
+        mean_cum += block_mean;
+        mean_sq_cum += pow(block_mean, 2);
+        mean[n] = mean_cum / (n + 1);
+        err[n] = std::sqrt((mean_sq_cum / (n + 1) - std::pow(mean[n], 2)) / n);
+    }
+    err[0] = 0;
+}
+
+double norm(std::valarray<double> p){
+    return std::sqrt(std::pow(p,2).sum());
+}
+
+double psi100(std::valarray<double> p){
+    return std::exp(-2*norm(p)) / M_PI;
+}
+
+double psi210(std::valarray<double> p){
+    return std::exp(-norm(p)) * p[2]*p[2] / (32 * M_PI);
+}
+
+std::valarray<double> T_uniform(std::valarray<double> p, double step, Random rand){
+    double dr = step * rand.Rannyu();
+    double theta = 2 * M_PI * rand.Rannyu();
+    double phi = M_PI * rand.Rannyu();
+        
+    return p + dr * std::valarray({std::sin(theta) * std::cos(phi),
+                                   std::sin(theta) * std::sin(phi),
+                                   std::cos(theta)
+                                  });
+}
+
+void metropolis(std::function<double(std::valarray<double>)> pdf, 
+                std::function<std::valarray<double>(std::valarray<double>, double step, Random rand)> T, 
+                std::valarray<double> p,
+                double step,
+                unsigned int n_samples,
+                Random rand) {
+    unsigned int rej = 0;
+    double A_mean = 0;
+    double mean = 0;
+    
+    // first step
+    std::cout << p[0] << " " << p[1] <<  " " << p[2] << "\t\t" << norm(p) << " " << pdf(p) << std::endl;
+    for (unsigned int n = 0; n < n_samples - 1; n++) {
+        std::valarray<double> p_new = T(p, step, rand);
+        
+        // here we have assumed the symmetry of T
+        double A = std::min(1., pdf(p_new)/pdf(p));
+        A_mean += A;
+        double r = rand.Rannyu();
+        std::cout << n << ":: ";
+        if (r <= A) {
+            // accept
+            p = p_new;
+        } else
+            rej++;
+//         std::cout << p[0] << " " << p[1] <<  " " << p[2] << "\t\t" << norm(p) << " " << pdf(p) << std::endl;
+        std::cout << norm(p) << std::endl;
+        mean += norm(p);
+    }
+    std::cout << "Rejected " << rej/(double)n_samples << std::endl;
+    std::cout << "A_mean " << A_mean/(double)n_samples << std::endl;
+    std::cout << "Mean " << mean/(double)n_samples << std::endl;
+}
+    
+int main(){
+    Random rand;
+    int iv[] = {0,0,0,1};
+    rand.SetRandom(iv, 2892, 2587); 
+    
+    std::valarray<double> p (1,3);
+    metropolis(psi100, T_uniform, p, 2.6, 1000, rand);
+//     metropolis(psi210, T_uniform, p, 6.7, 1000000, rand);
+}

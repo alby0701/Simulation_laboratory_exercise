@@ -1,0 +1,18 @@
+{T}
+{Ns}
+{Jm}
+{Hm}
+{Sampling}
+{Old_Configuration}
+{Blocks}
+{Steps}
+{Equilibration}
+
+  ReadInput >> temp;
+  ReadInput >> nspin;
+  ReadInput >> J;
+  ReadInput >> h;
+  ReadInput >> metro;
+  ReadInput >> nblk;
+  ReadInput >> nstep;
+  ReadInput >> equilibration;
